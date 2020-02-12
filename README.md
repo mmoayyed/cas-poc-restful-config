@@ -157,3 +157,9 @@ The response should outline the collection of settings that were affected and re
 ...and if you go to `http://localhost:8080/cas/login`, you should see:
 
 ![image](https://user-images.githubusercontent.com/1205228/74317245-7dd79380-4d94-11ea-924f-b8f59620cea5.png)
+
+# What Else?
+
+- Spring Cloud also presents the ability to distribute the refresh request, if the receiving application (CAS) is distributed. This is managed using the Spring Cloud Bus. 
+- Components that can be refreshed are marked with `@RefreshScope`. Not everything is refreshable, and improvements can be made incrementally to mark and tag components for reloadability.
+- The Spring Actuator endpoints are provided by Spring Boot and Spring Cloud, whose security passes through Spring Security and can be configured to accept a variety of credentials for access.
