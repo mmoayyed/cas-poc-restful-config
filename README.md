@@ -91,7 +91,7 @@ The API is expected to return a JSON map of relevant CAS settings:
 Items to note:
 
 1. We are declaring two external identity providers (CAS servers) for delegated authentication
-2. We are exposing all CAS actuator endpoints (powered by Spring Boot) and securing them using basic authN via `casuser:Mellon`
+2. We are exposing all CAS actuator endpoints (powered by Spring Boot) and securing them using basic authN via `casuser:Mellon` (More on this later)
 3. Other misc settings for server name, description, and logging config.
 
 When you run the POC, you should expect the following lines in the logs:
@@ -108,3 +108,52 @@ NFO [org.apereo.cas.support.pac4j.config.support.authentication.Pac4jAuthenticat
 ...and if you go to `http://localhost:8080/cas/login`, you should see:
 
 ![image](https://user-images.githubusercontent.com/1205228/74315845-c772af00-4d91-11ea-9de4-34fb222581fd.png)
+
+# Refresh & Reload
+
+The CAS server is able to dynamically alter itself once it receives a refresh request. Using this strategy, one can modify values and settings in the configuration store (backed by REST), and then
+send a notification request to the CAS server to update its state. The configuration management, retrieval and refreshability of components are all managed by Spring Cloud and family.
+
+As an example, you can modify the configuration store to match the following:
+
+
+```json
+{
+    "cas.authn.pac4j.cas[0].loginUrl": "https://casserver.herokuapp.com/cas/login",
+    "cas.authn.pac4j.cas[0].protocol": "CAS30",
+    "cas.authn.pac4j.cas[0].clientName" : "CAS Here",
+    "cas.authn.pac4j.cas[0].enabled": true,    
+    
+    "management.endpoints.web.exposure.include": "*",
+    "management.endpoints.enabled-by-default": "true",
+    "cas.monitor.endpoints.endpoint.defaults.access":"AUTHENTICATED",
+    "spring.security.user.name": "casuser",
+    "spring.security.user.password" : "Mellon",
+    
+    "server.port": 8080,
+    "server.ssl.enabled": false,
+    "cas.server.name": "http://localhost:8080",
+    "cas.server.prefix": "http://localhost:8080/cas",
+    
+    "logging.level.org.springframework.boot": "debug",
+    "logging.level.org.apereo.cas": "debug"
+}
+```
+
+Changes are:
+
+1. We renamed one identity provider to be `CAS Here`
+2. We removed the second identity provider
+2. We enabled `DEBUG` logging for `org.apereo.cas`
+
+Once changes are saved, the CAS server can begin to refresh its state via:
+
+```bash
+curl -k -u casuser:Mellon http://localhost:8080/cas/actuator/refresh -d {} -H "Content-Type: application/json"
+```
+
+The response should outline the collection of settings that were affected and refreshed. 
+
+...and if you go to `http://localhost:8080/cas/login`, you should see:
+
+![image](https://user-images.githubusercontent.com/1205228/74317245-7dd79380-4d94-11ea-924f-b8f59620cea5.png)
